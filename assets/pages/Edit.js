@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from "react";
 import {View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image} from "react-native";
-import { DirectLeft, GalleryImport, Add } from "iconsax-react-native";
+import { DirectLeft } from "iconsax-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { fontType, colors } from "../theme";
-import ImagePicker from 'react-native-image-crop-picker';
-import storage from '@react-native-firebase/storage';
 import firestore from '@react-native-firebase/firestore';
 
 const Edit = ({route}) => {
   const {ID} = route.params;
   const [Post, setPost] = useState({
-    name: "",
-    image: "",
-    location: "",
+    judul: "",
+    deskripsi: "",
     PostAt: ""
   });
   const handleChange = (key, value) => {
@@ -22,8 +19,6 @@ const Edit = ({route}) => {
     });
   };
   const navigation = useNavigation();
-  const [image, setImage] = useState(null);
-  const [PrevImg, setPrevImg] = useState(null);
   useEffect(() => {
     const subscriber = firestore()
       .collection('post')
@@ -31,39 +26,17 @@ const Edit = ({route}) => {
       .onSnapshot(documentSnapshot => {
         const Post = documentSnapshot.data();
         setPost({
-          name: Post.name,
-          image: Post.image,
-          location: Post.location,
+          judul: Post.judul,
+          deskripsi: Post.deskripsi,
           PostAt: Post.PostAt,
         });
-        setPrevImg(Post.image);
-        setImage(Post.image);
       });
     return () => subscriber();
   }, [ID]);
-  const UploadImg = async () => {
-    ImagePicker.openPicker()
-      .then(image => {
-        setImage(image.path);
-      })
-  };
   const Update = async () => {
-    let filename = image.substring(image.lastIndexOf('/') + 1);
-    const extension = filename.split('.').pop();
-    filename = Date.now() + '.' + extension;
-    const reference = storage().ref(`blogimages/${filename}`);
-    if (image !== PrevImg && PrevImg) {
-      const PrevImage = storage().refFromURL(PrevImg);
-      await PrevImage.delete();
-    }
-    if (image !== PrevImg) {
-      await reference.putFile(image);
-    }
-    const url = image !== PrevImg ? await reference.getDownloadURL() : PrevImg;
     await firestore().collection('post').doc(ID).update({
-      name: Post.name,
-      image: url,
-      location: Post.location,
+      judul: Post.judul,
+      deskripsi: Post.deskripsi,
       PostAt: Post.PostAt,
     });
     navigation.navigate('Home');
@@ -84,42 +57,24 @@ const Edit = ({route}) => {
       >
         <View style={styles.border}>
           <TextInput
-            placeholder="Location"
-            value={Post.location}
-            onChangeText={text => handleChange("location", text)}
+            placeholder="Ada agenda apa nih?"
+            value={Post.judul}
+            onChangeText={text => handleChange("judul", text)}
             placeholderTextColor={colors.blue(0.6)}
             multiline
             style={styles.title}
           />
         </View>
-        {image ? (
-          <View style={{position: 'relative'}}>
-            <Image
-              style={{width: '100%', height: 150}}
-              source={{
-                uri: image,
-              }}
-            />
-            <TouchableOpacity
-              style={{
-                position: 'absolute',
-                top: -5,
-                right: -5,
-                backgroundColor: '#1D60CC',
-                borderRadius: 25,
-              }}
-              onPress={() => setImage(null)}>
-              <Add size='20' variant='Linear' color='#FFFFFF' style={{transform: [{rotate: '45deg'}]}}/>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity onPress={UploadImg}>
-            <View style={styles.imageUpload}>
-              <GalleryImport size="32" color="#1D60CC"/>
-              <Text style={styles.label}>Add Your Photo Here</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        <View style={styles.borderDes}>
+          <TextInput
+            placeholder="Deskripsi"
+            value={Post.deskripsi}
+            onChangeText={text => handleChange("deskripsi", text)}
+            placeholderTextColor={colors.blue(0.6)}
+            multiline
+            style={styles.title}
+          />
+        </View>
       </ScrollView>
       <TouchableOpacity style={styles.button} onPress={Update}>
         <Text style={styles.buttonLabel}>Edit</Text>
@@ -165,6 +120,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     borderColor: colors.blue(0.4),
+  },
+  borderDes: {
+    borderStyle: "dashed",
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    borderColor: colors.blue(0.4),
+    height: 300
   },
   title: {
     fontSize: 16,
