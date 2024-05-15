@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, ImageBackground, ScrollView, Animated, StyleSheet } from 'react-native';
-import { Gallery, Category, Nav } from '../components';
+import { Gallery, Nav } from '../components';
 const Home = () => {
   const [scrollY] = useState(new Animated.Value(0));
   const headerHeight = scrollY.interpolate({
